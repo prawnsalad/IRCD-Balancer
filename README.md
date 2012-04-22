@@ -1,4 +1,4 @@
-# Install via git
+## Install via git
 
 * Clone the git repository:
 
@@ -18,7 +18,7 @@
     $ nano ircdbalancer_conf.js
 
 
-# Installing on system startup / Running as a deamon
+## Installing on system startup / Running as a deamon
 There is an upstart script (ircdbalancer_upstart.conf) provided that may be used to install ircdbalancer as a deamon.
 
 * Copy ircdbalancer_upstart.conf to your upstart init folder
@@ -47,7 +47,7 @@ As a deamon:
     $ start ircdbalancer
 
 
-# Runtime commands
+## Runtime commands
 Once running, you can interact with ircdbalancer to update the config or look at simple statistics without turning the server off.
 
 If running a deamon:
@@ -59,12 +59,17 @@ If running as normal, you can simply type into the console.
 ### Control commands
 
 Enable / disable basic statistic reporting
+
     $ stats
 
+
 View the current IRCD pool
+
     $ pool
 
+
 Reload the configuration and rebind the server listeners
+
     $ rehash
 
 
