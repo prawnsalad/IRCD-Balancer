@@ -47,5 +47,26 @@ As a deamon:
     $ start ircdbalancer
 
 
+# Runtime commands
+Once running, you can interact with ircdbalancer to update the config or look at simple statistics without turning the server off.
+
+If running a deamon:
+
+    $ ns -U /opt/ircdbalancer/control.sock
+
+If running as normal, you can simply type into the console.
+
+### Control commands
+
+Enable / disable basic statistic reporting
+    $ stats
+
+View the current IRCD pool
+    $ pool
+
+Reload the configuration and rebind the server listeners
+    $ rehash
+
+
 # Bugs
 Report bugs using the issue tracker on github: https://github.com/prawnsalad/IRCD-Balancer/issues
