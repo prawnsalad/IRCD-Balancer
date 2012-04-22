@@ -56,7 +56,7 @@ Once running, you can interact with ircdbalancer to update the config or look at
 
 If running a deamon:
 
-    $ ns -U /opt/ircdbalancer/control.sock
+    $ nc -U /opt/ircdbalancer/control.sock
 
 If running as normal, you can simply type into the console.
 
