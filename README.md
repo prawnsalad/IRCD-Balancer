@@ -1,3 +1,12 @@
+IRCD-Balancer allows you to spread IRC clients between multiple IRC servers.
+Why would you want to do this? Several methods of usage have come in use:
+* Keeping the IRC leaves hidden from public view
+* One entry point to the IRC network or network segment
+
+Built in resource limits have been implimented to automatically shut-off the server should the balancer become overwhelmed with unwanted traffic, whilst allowing existing clients to continue talking safely.
+This has become handy for networks that attract DDOS attacks.
+
+
 ## Prerequisites
 
 IRCD-Balancer is built using Node.js, so you must have this installed first. http://nodejs.org/
