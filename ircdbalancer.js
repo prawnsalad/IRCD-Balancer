@@ -9,14 +9,16 @@ var net = require('net'),
 
 
 
-/*
-    Levels:
-    1 - Error
-    2 - Notice
-    3 - Info
-    4 - Debug
-
-    logControl will be set to a function when ran as a deamon
+/**
+ *  Logging and control socket outputs
+ *
+ *  Levels:
+ *    1 - Error
+ *    2 - Notice
+ *    3 - Info
+ *    4 - Debug
+ *
+ *  logControl will be set to a function when ran as a deamon
 */
 var logControl = false,
     log_level = 3;
@@ -64,6 +66,12 @@ var log = function (what, level) {
 };
 
 
+
+
+
+/**
+ *  Handles a socket and its data processing
+ */
 var SocketHandler = function (ircd_pool) {
     var that = this;
 
@@ -98,7 +106,7 @@ var SocketHandler = function (ircd_pool) {
             command = spli[i].split(' ')[0];
 
             if (allowed_into_buffer.indexOf(command) != -1) {
-//log('Command recieved: ' + command);
+                //log('Command recieved: ' + command);
                 this.buffer_spli.push(command);
             }
 
@@ -127,7 +135,7 @@ var SocketHandler = function (ircd_pool) {
     var processBuffer = function (socket) {
         // If we don't have minimum requirements, leave now
         if (!checkRequiredBuffers(socket)) {
-log('Not enough data in buffer. Destroying socket.', 4);
+            log('Not enough data in buffer. Destroying socket.', 4);
             socket.destroy();
             return;
         }
@@ -151,7 +159,8 @@ log('Not enough data in buffer. Destroying socket.', 4);
             socket.destroy();
             return;
         }
-log('Piping ' + client_ip + ' to ' + ircd.host + ':' + ircd.port, 4);
+        
+        log('Piping ' + client_ip + ' to ' + ircd.host + ':' + ircd.port, 4);
         var completePiping = function() {
             server_connection.write('WEBIRC ' + ircd.webirc_pass + ' appliance ' + client_host + ' ' + client_ip + '\r\n');
             server_connection.write(socket.buffer);
@@ -225,8 +234,9 @@ log('Piping ' + client_ip + ' to ' + ircd.host + ':' + ircd.port, 4);
 
 
 
-
-
+/**
+ *  The server itself and limit management
+ */
 var ProxyServer = function (config_file) {
     var config = new Config(config_file),
         servers = [],
@@ -289,7 +299,7 @@ var ProxyServer = function (config_file) {
 
         if (limits['load'] != 0) {
             var load_avg = os.loadavg();
-//log('Limit: load = ' + (load_avg[0] * os.cpus().length).toString());
+            //log('Limit: load = ' + (load_avg[0] * os.cpus().length).toString());
             if (load_avg[0] * os.cpus().length > limits['load'] * os.cpus().length) {
                 stop_server = true;
             }
@@ -300,7 +310,8 @@ var ProxyServer = function (config_file) {
             _.each(servers, function (server) {
                 num_connections += server.server.connections;
             });
-//log('Limit: connections = ' + num_connections.toString());
+            //log('Limit: connections = ' + num_connections.toString());
+
             if (num_connections >= limits['connections']) {
                 stop_server = true;
             }
@@ -382,6 +393,10 @@ var ProxyServer = function (config_file) {
 
 
 
+
+/**
+ *  Config loader
+ */
 var Config = function (file_name) {
     var config = {};
 
@@ -434,7 +449,9 @@ var Config = function (file_name) {
 
 
 
-
+/**
+ *  Server startup
+ */
 
 
 log('Using config ' + __dirname + '/ircdbalancer_conf.js', 2);
@@ -445,6 +462,7 @@ proxy_server.start();
 
 
 
+// Make sure the balancer doesn't quit on an unhandled error
 process.on('uncaughtException', function (e) {
     log('[Uncaught exception] ' + e, 1);
 });
@@ -455,6 +473,9 @@ process.on('uncaughtException', function (e) {
 
 
 
+/**
+ *  Handle control messages while running
+ */
 var control = function (data, out) {
     var parts = data.toString().trim().split(' ');
 
