@@ -8,7 +8,7 @@
 
     $ nano ircdbalancer_conf.js
 
-# Install via download
+## Install via download
 
 * Download and unzip the source from:
   https://github.com/prawnsalad/IRCD-Balancer/zipball/master
@@ -37,7 +37,7 @@ You can now use the following commands to control ircdbalancer:
     $ restart ircdbalancer
 
 
-# Running 
+## Running 
 From the source folder:
 
     $ node ircdbalancer.js
@@ -73,5 +73,5 @@ Reload the configuration and rebind the server listeners
     $ rehash
 
 
-# Bugs
+## Bugs
 Report bugs using the issue tracker on github: https://github.com/prawnsalad/IRCD-Balancer/issues
