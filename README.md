@@ -1,3 +1,7 @@
+## Prerequisites
+
+IRCD-Balancer is built using Node.js, so you must have this installed first. http://nodejs.org/
+
 ## Install via git
 
 * Clone the git repository:
