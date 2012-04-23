@@ -26,7 +26,7 @@ var logControl = false,
 var log = function (what, level) {
     var ts = '';
 
-    if (typeof what != 'string' && typeof what != 'number') {
+    if (typeof what !== 'string' && typeof what !== 'number') {
         what = util.inspect(what, false, 3);
     }
 
@@ -38,7 +38,7 @@ var log = function (what, level) {
 
     switch (level) {
         case 1:
-            debug(ts + what);
+            util.debug(ts + what);
             if (logControl) logControl(what);
             break;
 
@@ -99,33 +99,33 @@ var SocketHandler = function (ircd_pool) {
         if (spli.length <= 1) return;
 
         var command;
-        for (var i in spli) {
+        _.each(spli, function (val, i) {
             // Leave the last one
-            if (i == spli.length - 1) continue;
+            if (i === spli.length - 1) return;
 
-            command = spli[i].split(' ')[0];
+            command = val.split(' ')[0];
 
-            if (allowed_into_buffer.indexOf(command) != -1) {
+            if (allowed_into_buffer.indexOf(command) !== -1) {
                 //log('Command recieved: ' + command);
                 this.buffer_spli.push(command);
             }
 
             // If we have everything or this is an unallowed command, process the socket buffer
-            if (checkRequiredBuffers(this) || allowed_into_buffer.indexOf(command) == -1) {
+            if (checkRequiredBuffers(this) || allowed_into_buffer.indexOf(command) === -1) {
                 // Stop buffering incoming data
                 this.buffer_accepting = false;
                 processBuffer(this);
                 return;
             }
 
-        }
+        });
     };
 
 
 
     var checkRequiredBuffers = function (socket) {
         // Do we have all required commands?
-        if (socket.buffer_spli.indexOf('USER') == -1 || socket.buffer_spli.indexOf('NICK') == -1) {
+        if (socket.buffer_spli.indexOf('USER') === -1 || socket.buffer_spli.indexOf('NICK') === -1) {
             return false;
         }
 
@@ -147,8 +147,8 @@ var SocketHandler = function (ircd_pool) {
 
 
     var startPiping = function (socket) {
-        var is_ssl = (typeof socket.encrypted == 'object'),
-            ircd = selectIrcd(is_ssl)
+        var is_ssl = (typeof socket.encrypted === 'object'),
+            ircd = selectIrcd(is_ssl),
             client_host = socket.remoteAddress,
             client_ip = socket.remoteAddress,
             server_connection = null;
@@ -181,7 +181,7 @@ var SocketHandler = function (ircd_pool) {
 
         var serverConErrorHandler = function (err) {
             socket.destroy();
-        }
+        };
 
         if (!is_ssl) {
             server_connection = net.connect(ircd.port, ircd.host, completePiping);
@@ -222,7 +222,7 @@ var SocketHandler = function (ircd_pool) {
         });
         
         return choices[Math.floor(Math.random() * choices.length)];
-    }
+    };
 
 
     return {
@@ -253,7 +253,7 @@ var ProxyServer = function (config_file) {
     };
 
     var start = function () {
-        if (state == 1) {
+        if (state === 1) {
             log('Servers already running. Stop servers first to force a restart.', 2);
             return;
         }
@@ -273,7 +273,7 @@ var ProxyServer = function (config_file) {
         // If we haven't started already, periodically check the server limits
         if (!limit_tmr) {
             limit_tmr = setTimeout(checkLimits, 5000);
-        };
+        }
     };
 
     var stop = function () {
@@ -294,34 +294,34 @@ var ProxyServer = function (config_file) {
     var setLimit = function (type, value) {
         limits[type] = value;
     };
-    var checkLimits = function (load_avg) {
+    var checkLimits = function () {
         var stop_server = false;
 
-        if (limits['load'] != 0) {
+        if (limits.load !== 0) {
             var load_avg = os.loadavg();
             //log('Limit: load = ' + (load_avg[0] * os.cpus().length).toString());
-            if (load_avg[0] * os.cpus().length > limits['load'] * os.cpus().length) {
+            if (load_avg[0] * os.cpus().length > limits.load * os.cpus().length) {
                 stop_server = true;
             }
         }
 
-        if (limits['connections'] != 0) {
+        if (limits.connections !== 0) {
             var num_connections = 0;
             _.each(servers, function (server) {
                 num_connections += server.server.connections;
             });
             //log('Limit: connections = ' + num_connections.toString());
 
-            if (num_connections >= limits['connections']) {
+            if (num_connections >= limits.connections) {
                 stop_server = true;
             }
         }
 
 
         if (stop_server) {
-            if (state != 0) stop();
+            if (state !== 0) stop();
         } else {
-            if (state != 1) start();
+            if (state !== 1) start();
         }
 
         limit_tmr = setTimeout(checkLimits, 5000);
@@ -333,19 +333,18 @@ var ProxyServer = function (config_file) {
 
         servers = [];
 
-        for (i in config.config.servers) {
-            server_conf = config.config.servers[i];
+        _.each(config.config.servers, function (server_conf, i) {
             opts = {};
             server = {opts: server_conf, server: null};
 
-            if (typeof server_conf.cert == 'string') {
+            if (typeof server_conf.cert === 'string') {
                 opts.cert = fs.readFileSync(server_conf.cert);
                 opts.key = fs.readFileSync(server_conf.key);
 
                 // This is necessary only if using the client certificate authentication.
                 //opts.requestCert = true;
 
-                if (typeof opts.ca == 'string') {
+                if (typeof opts.ca === 'string') {
                     opts.ca = [fs.readFileSync(server_conf.ca)];
                 }
 
@@ -355,7 +354,7 @@ var ProxyServer = function (config_file) {
                 server.server = net.createServer(handleConnection);
                 servers.push(server);
             }
-        }
+        });
     };
 
 
@@ -404,7 +403,8 @@ var Config = function (file_name) {
         var i, j,
             nconf = {},
             cconf = {},
-            tmp_conf;
+            tmp_conf,
+            that = this;
         
 
         try {
@@ -412,23 +412,18 @@ var Config = function (file_name) {
             tmp_conf = require(file_name);
             nconf = tmp_conf.conf;
 
-            for (j in nconf) {
+            _.each(nconf, function (val, j) {
                 // If this has changed from the previous config, mark it as changed
-                if (!_.isEqual(this.config[j], nconf[j])) {
-                    cconf[j] = nconf[j];
+                if (!_.isEqual(that.config[j], val)) {
+                    cconf[j] = val;
                 }
 
-                this.config[j] = nconf[j];
-            }
+                that.config[j] = val;
+            });
 
         } catch (e) {
-            switch (e.code) {
-            //case 'ENOENT':      // No file/dir
-            //    break;
-            default:
-                log('An error occured parsing the config file ' + file_name + ': ' + e.message, 1);
-                return false;
-            }
+            log('An error occured parsing the config file ' + file_name + ': ' + e.message, 1);
+            return false;
         }
 
         return {new_config: nconf, changed_config: cconf};
@@ -510,7 +505,7 @@ var control = function (data, out) {
 };
 
 
-if (process.argv.indexOf('-d') == -1) {
+if (process.argv.indexOf('-d') === -1) {
     // Do not run as a deamon
 
     process.stdin.resume();
@@ -524,7 +519,7 @@ if (process.argv.indexOf('-d') == -1) {
         
         logControl = function (data) {
             if (client_socket) {
-                if (typeof data == 'string' || typeof data == 'number') {
+                if (typeof data === 'string' || typeof data === 'number') {
                     client_socket.write(data + '\n');
                 } else {
                     client_socket.write(util.inspect(data) + '\n');
