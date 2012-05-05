@@ -72,7 +72,7 @@ var log = function (what, level) {
 /**
  *  Handles a socket and its data processing
  */
-var SocketHandler = function (ircd_pool) {
+var SocketHandler = function (config) {
     var that = this;
 
     var allowed_into_buffer = [
@@ -167,7 +167,7 @@ var SocketHandler = function (ircd_pool) {
             if (typeof ircd.webirc_pass === 'string') {
                 server_connection.write('WEBIRC ' + ircd.webirc_pass + ' appliance ' + client_host + ' ' + client_ip + '\r\n');
             }
-            
+
             server_connection.write(socket.buffer);
 
             // No need for event listeners anymore
@@ -207,7 +207,7 @@ var SocketHandler = function (ircd_pool) {
 
         // Filter the ircd list to what we need
         var choices = [];
-        _.each(ircd_pool, function (ircd) {
+        _.each(config.config.ircd_pool, function (ircd) {
             var obj;
             if (ssl) {
                 if (typeof ircd.ssl_port === 'number') {
@@ -388,7 +388,7 @@ var ProxyServer = function (config_file) {
 
     rehash();
 
-    socket_handler = new SocketHandler(config.config.ircd_pool);
+    socket_handler = new SocketHandler(config);
 
     printStats();
 
@@ -471,10 +471,10 @@ proxy_server.start();
 
 
 // Make sure the balancer doesn't quit on an unhandled error
-/*process.on('uncaughtException', function (e) {
+process.on('uncaughtException', function (e) {
     log('[Uncaught exception] ' + e, 1);
 });
-*/
+
 
 
 
