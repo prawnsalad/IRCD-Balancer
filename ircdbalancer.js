@@ -94,8 +94,10 @@ var SocketHandler = function (ircd_pool) {
     var onData = function (data) {
         if (!this.buffer_accepting) return;
 
+        var that = this;
+
         this.buffer += data;
-        var spli = data.toString().split('\n');
+        var spli = this.buffer.toString().split('\n');
         if (spli.length <= 1) return;
 
         var command;
@@ -107,14 +109,14 @@ var SocketHandler = function (ircd_pool) {
 
             if (allowed_into_buffer.indexOf(command) !== -1) {
                 //log('Command recieved: ' + command);
-                this.buffer_spli.push(command);
+                that.buffer_spli.push(command);
             }
 
             // If we have everything or this is an unallowed command, process the socket buffer
-            if (checkRequiredBuffers(this) || allowed_into_buffer.indexOf(command) === -1) {
+            if (checkRequiredBuffers(that) || allowed_into_buffer.indexOf(command) === -1) {
                 // Stop buffering incoming data
-                this.buffer_accepting = false;
-                processBuffer(this);
+                that.buffer_accepting = false;
+                processBuffer(that);
                 return;
             }
 
@@ -162,7 +164,10 @@ var SocketHandler = function (ircd_pool) {
         
         log('Piping ' + client_ip + ' to ' + ircd.host + ':' + ircd.port, 4);
         var completePiping = function() {
-            server_connection.write('WEBIRC ' + ircd.webirc_pass + ' appliance ' + client_host + ' ' + client_ip + '\r\n');
+            if (typeof ircd.webirc_pass === 'string') {
+                server_connection.write('WEBIRC ' + ircd.webirc_pass + ' appliance ' + client_host + ' ' + client_ip + '\r\n');
+            }
+            
             server_connection.write(socket.buffer);
 
             // No need for event listeners anymore
@@ -244,9 +249,12 @@ var ProxyServer = function (config_file) {
         limits = {load: 0, connections: 0},
         limit_tmr,
         cons_per_sec = 0, print_stats = {print: false},
-        state = 0;      // 0 = stopped, 1 = running
+        state = 0,      // 0 = stopped, 1 = running
+        accept_connections = true;
 
     var handleConnection = function (socket) {
+        if (!accept_connections) return;
+
         log('Connection from ' + socket.remoteAddress, 4);
         cons_per_sec++;
         socket_handler.applySocket(socket);
@@ -277,6 +285,11 @@ var ProxyServer = function (config_file) {
     };
 
     var stop = function () {
+        if (state === 0) {
+            // Server have already been stopped
+            return;
+        }
+
         _.each(servers, function (server) {
             try {
                 server.server.close();
@@ -319,9 +332,9 @@ var ProxyServer = function (config_file) {
 
 
         if (stop_server) {
-            if (state !== 0) stop();
+            accept_connections = false;
         } else {
-            if (state !== 1) start();
+            accept_connections = true;
         }
 
         limit_tmr = setTimeout(checkLimits, 5000);
@@ -452,16 +465,16 @@ var Config = function (file_name) {
 log('Using config ' + __dirname + '/ircdbalancer_conf.js', 2);
 var proxy_server = new ProxyServer(__dirname + '/ircdbalancer_conf.js');
 proxy_server.setLimit('load', 0.9);
-proxy_server.setLimit('connections', 5000);
+proxy_server.setLimit('connections', 1);
 proxy_server.start();
 
 
 
 // Make sure the balancer doesn't quit on an unhandled error
-process.on('uncaughtException', function (e) {
+/*process.on('uncaughtException', function (e) {
     log('[Uncaught exception] ' + e, 1);
 });
-
+*/
 
 
 
