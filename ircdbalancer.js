@@ -465,7 +465,7 @@ var Config = function (file_name) {
 log('Using config ' + __dirname + '/ircdbalancer_conf.js', 2);
 var proxy_server = new ProxyServer(__dirname + '/ircdbalancer_conf.js');
 proxy_server.setLimit('load', 0.9);
-proxy_server.setLimit('connections', 1);
+proxy_server.setLimit('connections', 5000);
 proxy_server.start();
 
 
