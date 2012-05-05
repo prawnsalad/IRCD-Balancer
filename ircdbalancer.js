@@ -332,12 +332,36 @@ var ProxyServer = function (config_file) {
 
 
         if (stop_server) {
-            accept_connections = false;
+            if (state === 1) {
+                log('Not accepting connections: Limits reached', 2);
+                stop();
+            }
         } else {
-            accept_connections = true;
+            if (state === 0) {
+                log('Accepting connections', 2);
+                start();
+            }
         }
 
         limit_tmr = setTimeout(checkLimits, 5000);
+    };
+
+
+    var acceptConnections = function () {
+        _.each(servers, function (server) {
+            server.server.addListener('connection', handleConnection);
+        });
+
+        accept_connections = true;
+    };
+
+
+    var stopAcceptingConnections = function () {
+        _.each(servers, function (server) {
+            server.server.removeAllListeners('connection');
+        });
+
+        accept_connections = false;
     };
 
 
@@ -361,20 +385,30 @@ var ProxyServer = function (config_file) {
                     opts.ca = [fs.readFileSync(server_conf.ca)];
                 }
 
-                server.server = tls.createServer(opts, handleConnection);
+                server.server = tls.createServer(opts);
                 servers.push(server);
             } else {
-                server.server = net.createServer(handleConnection);
+                server.server = net.createServer();
                 servers.push(server);
             }
         });
+
+        acceptConnections();
     };
 
 
     var printStats = function () {
-        if (print_stats.print) {
-            log('Connections a second: ' + cons_per_sec.toString(), 3);
-        }
+        var num_cons = 0,
+            msg = '';
+
+        _.each(servers, function (server) {
+            num_cons += server.server.connections;
+        });
+        msg = 'connections=' + num_cons.toString();
+
+        msg += ', connections_per_sec=' + cons_per_sec.toString();
+
+        if (print_stats.print) log(msg, 3);
 
         cons_per_sec = 0;
         _.delay(printStats, 1000);
