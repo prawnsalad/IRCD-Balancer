@@ -76,7 +76,7 @@ var SocketHandler = function (config) {
     var that = this;
 
     var allowed_into_buffer = [
-        'USER', 'PASS', 'NICK'
+        'USER', 'PASS', 'NICK', 'CAP'
     ];
     var required_in_buffer = [
         'USER', 'NICK'
