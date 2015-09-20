@@ -13,6 +13,7 @@ var net = require('net'),
  *  Logging and control socket outputs
  *
  *  Levels:
+ *   -1 - Fatal Error
  *    1 - Error
  *    2 - Notice
  *    3 - Info
@@ -21,8 +22,7 @@ var net = require('net'),
  *  logControl will be set to a function when ran as a deamon
 */
 var logControl = false,
-    log_level = 3;
-
+    logLevel = 3;
 var log = function (what, level) {
     var ts = '';
 
@@ -31,14 +31,24 @@ var log = function (what, level) {
     }
 
     level = level || 4;
-    if (level > log_level) return;
+    if (level > logLevel) return;
 
     // If this is going to stdout (logfile), then add timestamp
     if (!logControl) ts = new Date().toString() + ' ';
 
     switch (level) {
+        case -1:
+          if (logControl) {
+              logControl(what);
+          } else {
+              console.error(ts + what);
+          }
+          process.exit(-1);
+          break;
+        
         case 1:
-            util.debug(ts + what);
+            //util.debug(ts + what);
+            console.error(ts + what);
             if (logControl) logControl(what);
             break;
 
@@ -246,7 +256,6 @@ var ProxyServer = function (config_file) {
     var config = new Config(config_file),
         servers = [],
         socket_handler,
-        limits = {load: 0, connections: 0},
         limit_tmr,
         cons_per_sec = 0, print_stats = {print: false},
         state = 0,      // 0 = stopped, 1 = running
@@ -266,7 +275,10 @@ var ProxyServer = function (config_file) {
             return;
         }
 
-        log('Starting ' + servers.length.toString() + ' server(s)', 2);
+        // Set the log level from the config
+        logLevel = config.config.log_level;
+
+        log('Starting ' + servers.length.toString() + ' server(s) with log level ' + logLevel, 2);
         _.each(servers, function (server) {
             try {
                 server.server.listen(server.opts.port, server.opts.host);
@@ -305,27 +317,37 @@ var ProxyServer = function (config_file) {
 
 
     var setLimit = function (type, value) {
-        limits[type] = value;
+        config.config.limits[type] = value;
     };
-    var checkLimits = function () {
-        var stop_server = false;
 
-        if (limits.load !== 0) {
-            var load_avg = os.loadavg();
-            //log('Limit: load = ' + (load_avg[0] * os.cpus().length).toString());
-            if (load_avg[0] * os.cpus().length > limits.load * os.cpus().length) {
+    var checkLimits = function () {
+        var stop_server = false, 
+            trigger;
+
+        if(typeof config.config.limits === undefined) {
+          log('No limits defined');
+          return false;
+        }
+
+        if (config.config.limits.load !== 0) {
+            var load_avg = os.loadavg(),
+                load_avg_0 = load_avg[0] * os.cpus().length,
+                load_limit = config.config.limits.load * os.cpus().length;
+
+            if (load_avg_0 > load_limit) {
+                log('Limit: max load reached; ' + load_avg_0 + ' > ' + load_limit);
                 stop_server = true;
             }
         }
 
-        if (limits.connections !== 0) {
+        if (config.config.limits.connections !== 0) {
             var num_connections = 0;
             _.each(servers, function (server) {
-                num_connections += server.server.connections;
+                num_connections += server.server._connections;
             });
-            //log('Limit: connections = ' + num_connections.toString());
 
-            if (num_connections >= limits.connections) {
+            if (num_connections >= config.config.limits.connections) {
+                log('Limit: max connections reached; ' + num_connections + ' >= ' + config.config.limits.connections);
                 stop_server = true;
             }
         }
@@ -333,7 +355,7 @@ var ProxyServer = function (config_file) {
 
         if (stop_server) {
             if (state === 1) {
-                log('Not accepting connections: Limits reached', 2);
+                log('Not accepting new connections', 2);
                 stop();
             }
         } else {
@@ -342,10 +364,8 @@ var ProxyServer = function (config_file) {
                 start();
             }
         }
-
         limit_tmr = setTimeout(checkLimits, 5000);
     };
-
 
     var acceptConnections = function () {
         _.each(servers, function (server) {
@@ -400,9 +420,9 @@ var ProxyServer = function (config_file) {
     var printStats = function () {
         var num_cons = 0,
             msg = '';
-
+        //log('printStats');
         _.each(servers, function (server) {
-            num_cons += server.server.connections;
+            num_cons += server.server._connections;
         });
         msg = 'connections=' + num_cons.toString();
 
@@ -495,21 +515,42 @@ var Config = function (file_name) {
  *  Server startup
  */
 
+process.on( "SIGINT", function() {
+  console.log("\nInterupted");
+  process.exit(0);
+});
 
-log('Using config ' + __dirname + '/ircdbalancer_conf.js', 2);
-var proxy_server = new ProxyServer(__dirname + '/ircdbalancer_conf.js');
-proxy_server.setLimit('load', 0.9);
-proxy_server.setLimit('connections', 5000);
+/*
+var nextTick = process.nextTick;
+
+process.nextTick = function(callback) {
+  if (callback === undefined) {
+    return;
+  }
+  if (typeof callback !== 'function') {
+    console.trace(typeof callback + ' is not a function');
+    return;
+  }
+  if (nextTick !== undefined) {
+    return nextTick(callback);
+  }
+};
+*/
+
+var config = process.env.IRC_CONFIG || __dirname + '/config.js';
+if (!fs.existsSync(config)) { 
+  log('Config not found: ' + config, -1);
+} 
+
+log('Using config ' + config, 2);
+var proxy_server = new ProxyServer(config);
 proxy_server.start();
-
-
 
 // Make sure the balancer doesn't quit on an unhandled error
 process.on('uncaughtException', function (e) {
     log('[Uncaught exception] ' + e, 1);
+    //log('[Uncaught exception] ' + e.stack, 1);
 });
-
-
 
 
 
@@ -524,9 +565,9 @@ var control = function (data, out) {
     switch (parts[0]) {
         case 'loglevel':
             if (parts[1]) {
-                log_level = parts[1];
+                logLevel = parts[1];
             }
-            log('log_level = ' + log_level.toString(), 3);
+            log('log_level = ' + logLevel.toString(), 3);
             break;
 
         case 'rehash':

@@ -34,9 +34,9 @@ IRCD-Balancer is built using Node.js, so you must have this installed first. htt
 ## Installing on system startup / Running as a deamon
 There is an upstart script (ircdbalancer_upstart.conf) provided that may be used to install ircdbalancer as a deamon.
 
-* Copy ircdbalancer_upstart.conf to your upstart init folder
+* Copy & rename contirb/upstart.conf to your upstart init folder
 
-    $ sudo cp ircdbalancer_upstart.conf /etc/init/ircdbalancer.conf
+    $ sudo cp contrib/upstart.conf /etc/init/ircdbalancer.conf
 
 * Copy all the ircdbalancer sources to its application folder
 
