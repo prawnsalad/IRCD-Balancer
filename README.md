@@ -32,6 +32,17 @@ IRCD-Balancer is built using Node.js, so you must have this installed first. htt
 
         $ nano ircdbalancer_conf.js
 
+## Docker
+
+### Building a container        
+
+Build your very own docker container
+
+    $ docker build -t ircdbalancer -f Dockerfile .
+
+### Running a container
+
+    $ docker run -i -t -e 'IRC_SERVER=irc.mibbit.net' -e 'IRC_PORT=6667' -e 'IRC_PASSWORD=password' ircdbalancer 
 
 ## Installing on system startup / Running as a deamon
 There is an upstart script (`contrib/upstart.conf.example`) provided that may be used to install ircdbalancer as a deamon.
