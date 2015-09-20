@@ -1,4 +1,5 @@
 IRCD-Balancer allows you to spread IRC clients between multiple IRC servers.
+
 Why would you want to do this? Several methods of usage have come in use:
 * Keeping the IRC leaves hidden from public view
 * One entry point to the IRC network or network segment
@@ -13,35 +14,46 @@ IRCD-Balancer is built using Node.js, so you must have this installed first. htt
 
 ## Install via git
 
-* Clone the git repository:
+1. Clone the git repository:
 
-    $ git clone git@github.com:prawnsalad/IRCD-Balancer.git
+        $ git clone git@github.com:prawnsalad/IRCD-Balancer.git
 
-* Read and edit the configuration file:
+1. Copy `contrib/config.js.example` to `config.js` and edit the configuration file:
 
-    $ nano ircdbalancer_conf.js
+        $ nano config.js
 
-## Install via download
+## Download & Install
 
-* Download and unzip the source from:
-  https://github.com/prawnsalad/IRCD-Balancer/zipball/master
+1. Download and unzip the source from:
 
-* Read and edit the configuration file:
+        https://github.com/prawnsalad/IRCD-Balancer/zipball/master
 
-    $ nano ircdbalancer_conf.js
+1. Read and edit the configuration file:
 
+        $ nano ircdbalancer_conf.js
+
+## Docker
+
+### Building a container        
+
+Build your very own docker container
+
+    $ docker build -t ircdbalancer -f Dockerfile .
+
+### Running a container
+
+    $ docker run -i -t -e 'IRC_SERVER=irc.mibbit.net' -e 'IRC_PORT=6667' -e 'IRC_PASSWORD=password' ircdbalancer 
 
 ## Installing on system startup / Running as a deamon
-There is an upstart script (ircdbalancer_upstart.conf) provided that may be used to install ircdbalancer as a deamon.
+There is an upstart script (`contrib/upstart.conf.example`) provided that may be used to install ircdbalancer as a deamon.
 
-* Copy ircdbalancer_upstart.conf to your upstart init folder
+1. Copy & rename contirb/upstart.conf to your upstart init folder
 
-    $ sudo cp ircdbalancer_upstart.conf /etc/init/ircdbalancer.conf
+        $ sudo cp contrib/upstart.conf.example /etc/init/ircdbalancer.conf
 
-* Copy all the ircdbalancer sources to its application folder
+1. Copy all the ircdbalancer sources to its application folder
 
-    $ mkdir /opt/ircdbalancer
-    $ cp ./* /opt/ircdbalancer/
+        $ mkdir /opt/ircdbalancer && cp -a * /opt/ircdbalancer/
 
 You can now use the following commands to control ircdbalancer:
 
@@ -51,14 +63,13 @@ You can now use the following commands to control ircdbalancer:
 
 
 ## Running 
-From the source folder:
+* From the source folder:
 
-    $ node ircdbalancer.js
+        $ node ircdbalancer.js
 
-As a deamon:
+* As a deamon:
 
-    $ start ircdbalancer
-
+        $ start ircdbalancer
 
 ## Runtime commands
 Once running, you can interact with ircdbalancer to update the config or look at simple statistics without turning the server off.
@@ -87,4 +98,5 @@ Reload the configuration and rebind the server listeners
 
 
 ## Bugs
+
 Report bugs using the issue tracker on github: https://github.com/prawnsalad/IRCD-Balancer/issues

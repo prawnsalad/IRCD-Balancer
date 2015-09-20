@@ -16,13 +16,18 @@ var servers = [
     //{host: '0.0.0.0', port: 6697, cert:__dirname+'/server.cert.pem', key:__dirname+'/server.key.pem'}
 ];
 var ircd_pool = [
-    {host: 'irc1.network.com', port: 6667, webirc_pass: 'your_configured_webirc_password'},
+    {host: process.env.IRC_SERVER, port: parseInt(process.env.IRC_PORT), webirc_pass: process.env.IRC_PASSWORD }
     //{host: 'irc2.network.com', port: 6667, ssl_port: 6697, webirc_pass: 'your_configured_webirc_password'}
 ];
 
-
+var limits = {
+  connections: 5000,
+  load: 4.0
+};
 
 this.conf = {
 	servers: servers,
-	ircd_pool: ircd_pool
+	ircd_pool: ircd_pool,
+  limits: limits,
+  log_level: 1
 };
