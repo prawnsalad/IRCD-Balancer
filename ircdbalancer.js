@@ -216,7 +216,9 @@ var SocketHandler = function (config) {
         ssl = (typeof ssl === 'boolean') ? ssl : false;
 
         // Filter the ircd list to what we need
-        var choices = [];
+        //console.log('ssl', ssl);
+        //console.log('ircd_pool', config.config.ircd_pool);
+        var choices = [], ircd;
         _.each(config.config.ircd_pool, function (ircd) {
             var obj;
             if (ssl) {
@@ -232,11 +234,13 @@ var SocketHandler = function (config) {
             } else {
                 if (typeof ircd.port === 'number') {
                     choices.push(ircd);
-                }
+                } 
             }
         });
         
-        return choices[Math.floor(Math.random() * choices.length)];
+        ircd = choices[Math.floor(Math.random() * choices.length)];
+        //console.log('selected ircd', ircd);
+        return ircd;
     };
 
 
