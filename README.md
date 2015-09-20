@@ -1,4 +1,5 @@
 IRCD-Balancer allows you to spread IRC clients between multiple IRC servers.
+
 Why would you want to do this? Several methods of usage have come in use:
 * Keeping the IRC leaves hidden from public view
 * One entry point to the IRC network or network segment
@@ -17,11 +18,11 @@ IRCD-Balancer is built using Node.js, so you must have this installed first. htt
 
     $ git clone git@github.com:prawnsalad/IRCD-Balancer.git
 
-* Read and edit the configuration file:
+* Copy `contrib/config.js.example` to `config.js` and edit the configuration file:
 
-    $ nano ircdbalancer_conf.js
+    $ nano config.js
 
-## Install via download
+## Download & Install
 
 * Download and unzip the source from:
   https://github.com/prawnsalad/IRCD-Balancer/zipball/master
@@ -32,16 +33,15 @@ IRCD-Balancer is built using Node.js, so you must have this installed first. htt
 
 
 ## Installing on system startup / Running as a deamon
-There is an upstart script (ircdbalancer_upstart.conf) provided that may be used to install ircdbalancer as a deamon.
+There is an upstart script (`contrib/upstart.conf.example`) provided that may be used to install ircdbalancer as a deamon.
 
 * Copy & rename contirb/upstart.conf to your upstart init folder
 
-    $ sudo cp contrib/upstart.conf /etc/init/ircdbalancer.conf
+    $ sudo cp contrib/upstart.conf.example /etc/init/ircdbalancer.conf
 
 * Copy all the ircdbalancer sources to its application folder
 
-    $ mkdir /opt/ircdbalancer
-    $ cp ./* /opt/ircdbalancer/
+    $ mkdir /opt/ircdbalancer && cp -a * /opt/ircdbalancer/
 
 You can now use the following commands to control ircdbalancer:
 
@@ -87,4 +87,5 @@ Reload the configuration and rebind the server listeners
 
 
 ## Bugs
+
 Report bugs using the issue tracker on github: https://github.com/prawnsalad/IRCD-Balancer/issues
