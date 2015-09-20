@@ -58,8 +58,7 @@ You can now use the following commands to control ircdbalancer:
 
 * As a deamon:
 
-       $ start ircdbalancer
-
+        $ start ircdbalancer
 
 ## Runtime commands
 Once running, you can interact with ircdbalancer to update the config or look at simple statistics without turning the server off.
